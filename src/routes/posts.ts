@@ -9,4 +9,6 @@ router.get("/:postId", PostsController.getPost);
 
 router.post("/",PostsController.createPost);
 
+// router.patch("/:postId",PostsController.);
+
 export default router;

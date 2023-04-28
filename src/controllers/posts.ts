@@ -34,7 +34,7 @@ interface CreatePostBody{
     content: string 
 }
 
-export const createPost: RequestHandler<unknown, unknown, CreatePostBody, unknow> = async(req, res, next) => {
+export const createPost: RequestHandler<unknown, unknown, CreatePostBody, unknown> = async(req, res, next) => {
     const userId = req.body.userId;
     const content = req.body.content;
     try {

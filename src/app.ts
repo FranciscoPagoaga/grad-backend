@@ -13,11 +13,6 @@ app.use("/api/users", userRoutes);
 
 app.use("/api/posts", postRoutes);
 
-app.get("/", async (req, res) => {
-  const notes = await userModel.find().exec();
-  res.status(200).json(notes);
-});
-
 app.use((req, res, next) => {
   next(createHttpError("Endpoint not found"));
 });
