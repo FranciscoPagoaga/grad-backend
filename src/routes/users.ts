@@ -7,6 +7,10 @@ router.get("/", UsersController.getUsers);
 
 router.get("/:userId", UsersController.getUser);
 
-router.post("/", UsersController.createUser);
+router.post("/signup", UsersController.signUp);
+
+router.post("/login", UsersController.login);
+
+router.patch("/:userId", UsersController.updateUser);
 
 export default router;
