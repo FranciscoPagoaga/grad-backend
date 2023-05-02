@@ -4,15 +4,7 @@ import createHttpError from "http-errors";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { create } from "domain";
-
-export const getUsers: RequestHandler = async (req, res, next) => {
-  try {
-    const users = await userModel.find().exec();
-    res.status(200).json(users);
-  } catch (error) {
-    next(error);
-  }
-};
+import user from "../models/user";
 
 export const getUser: RequestHandler = async (req, res, next) => {
   const userId = req.params.userId;
@@ -35,117 +27,27 @@ export const getUser: RequestHandler = async (req, res, next) => {
   }
 };
 
-//interface created to validate the
-//structure type that should be used to create a User
-interface CreateUserBody {
-  name?: string;
-  email?: string;
-  user?: string;
-  password?: string;
-  biography?: string;
-  profilephoto?: string;
+interface followingUserBody{
+  _id: string
+  name: string
+  user: string,
+  biography: string,
+  profilephoto: string,
 }
 
-export const signUp: RequestHandler<
-  unknown,
-  unknown,
-  CreateUserBody,
-  unknown
-> = async (req, res, next) => {
-  const name = req.body.name;
-  const email = req.body.email;
-  const user = req.body.user;
-  const password = req.body.password;
-  const profilephoto = req.body.profilephoto;
+export const getUserFollowing: RequestHandler = async (req, res, next) => {
+  const userId = req.params.userId;
+  const user = await userModel.findById(userId);
 
-  try {
-    // ifs to validate if all the needed params
-    // are found in the package to create a user
-    // if one's not found, throws error
-    if (!name) {
-      throw createHttpError(400, "User must have a name");
-    }
-
-    if (!email) {
-      throw createHttpError(400, "User must have a email");
-    }
-
-    if (!user) {
-      throw createHttpError(400, "User must have a username");
-    }
-
-    if (!password) {
-      throw createHttpError(400, "User must have a password");
-    }
-
-    if (!profilephoto) {
-      throw createHttpError(400, "User must have a profilephoto");
-    }
-
-    const existingUser = await userModel.findOne({ user: user });
-    if (existingUser) {
-      throw createHttpError(409, "Username already taken.");
-    }
-
-    const existingEmail = await userModel.findOne({ email: email });
-    if (existingEmail) {
-      throw createHttpError(409, "Email already taken");
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 13);
-
-    // creates the model for the new user
-    const newUser = await userModel.create({
-      name: name,
-      email: email,
-      user: user,
-      password: hashedPassword,
-      biography: "",
-      profilephoto: profilephoto,
-      enable: true,
-    });
-
-    res.status(201).json(newUser);
-  } catch (error) {
-    next(error);
+  if(!user){
+    throw createHttpError(404, "User not found");
   }
-};
 
-interface LoginBody {
-  user?: string;
-  password?: string;
-}
-
-export const login: RequestHandler<
-  unknown,
-  unknown,
-  LoginBody,
-  unknown
-> = async (req, res, next) => {
-    const user = req.body.user;
-    const password = req.body.password;
-
-    try{
-        if(!user || !password) {
-            throw createHttpError(400, "Parameters missing");
-        }
-
-        const foundUser = await userModel.findOne({user: user}).select("+password +email").exec();
-
-        if(!foundUser){
-            throw createHttpError(401, "Invalid Credentials");
-        }
-
-        const passwordMatch = await bcrypt.compare(password, foundUser.password);
-
-        if(!passwordMatch) {
-            throw createHttpError(401, "Invalid Credentials");
-        }
-
-        res.status(201).json(user);
-    } catch (error) {
-        next(error);
-    }
+  const following  = await Promise.all(
+    user.following.map((id) => userModel.findById(id))
+  );
+  
+  // const formattedFollowing = following.map(({_id, name}) => {_id; name;})
 };
 
 interface UpdateUserParams {

@@ -1,11 +1,11 @@
 import app from "./app";
-import env from "./util/validateEnv";
 import mongoose from "mongoose";
+import config from "./config";
 
-const port = env.PORT;
-
+const port = config.PORT;
+console.log("Port: " + port)
 mongoose
-  .connect(env.MONGO_CONNECTION_STRING)
+  .connect(config.MONGO_URI)
   .then(() => {
     console.log("Mongoose Connected");
     app.listen(port, () => {

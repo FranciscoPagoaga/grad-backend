@@ -7,9 +7,9 @@ const userSchema = new Schema({
     password: { type: String, required: true },
     following: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
     followers: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
-    biography: { type: String, required: false },
-    profilephoto: { type: String, required: false }, 
-    enable: { type: Boolean, required: false }
+    biography: { type: String, required: false, default: "" },
+    profilephoto: { type: String, required: false, default: "" }, 
+    enable: { type: Boolean, required: true }
 },{timestamps: true});
 
 type User = InferSchemaType<typeof userSchema>;
