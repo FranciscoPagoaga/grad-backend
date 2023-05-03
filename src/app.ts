@@ -1,9 +1,10 @@
 import express, { NextFunction, Request, Response } from "express";
 import createHttpError, { isHttpError } from "http-errors";
 import multer from "multer";
-import path from "path"
+import path from "path";
 import { fileURLToPath } from "url";
-import { signUp } from "./controllers/auth"
+import { signUp } from "./controllers/auth";
+import { createPost } from "./controllers/posts";
 import userModel from "./models/user";
 import userRoutes from "./routes/users";
 import postRoutes from "./routes/posts";
@@ -28,6 +29,7 @@ const upload = multer({ storage })
 
 /* Routes With Files */
 app.post("/api/auth/signup", upload.single("picture"), signUp);
+app.post("/api/posts", upload.single("picture"), createPost);
 
 //routes
 app.use("/api/auth", authRoutes)

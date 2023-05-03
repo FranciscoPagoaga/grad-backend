@@ -3,7 +3,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { RequestHandler } from "express";
 import config from "../config";
 
-export const verifyToken: RequestHandler = async (req, res, next) =>{
+export const verifyToken: RequestHandler<unknown, unknown, any, unknown> = async (req, res, next) =>{
     try {
         let token = req.header("Authorization");
         if (!token){

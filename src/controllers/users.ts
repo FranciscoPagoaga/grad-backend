@@ -4,7 +4,6 @@ import createHttpError from "http-errors";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { create } from "domain";
-import user from "../models/user";
 
 export const getUser: RequestHandler = async (req, res, next) => {
   const userId = req.params.userId;
@@ -27,27 +26,111 @@ export const getUser: RequestHandler = async (req, res, next) => {
   }
 };
 
-interface followingUserBody{
-  _id: string
-  name: string
-  user: string,
-  biography: string,
-  profilephoto: string,
+interface followingUserBody {
+  _id: string;
+  name: string;
+  user: string;
+  biography: string;
+  profilephoto: string;
+}
+
+interface followingList {
+  userId: string;
 }
 
 export const getUserFollowing: RequestHandler = async (req, res, next) => {
-  const userId = req.params.userId;
-  const user = await userModel.findById(userId);
+  try {
+    const userId = req.params.userId;
+    const user = await userModel.findById(userId);
 
-  if(!user){
-    throw createHttpError(404, "User not found");
+    if (!user) {
+      throw createHttpError(404, "User not found");
+    }
+
+    const following = await Promise.all(
+      user.following.map((id) => userModel.findById(id))
+    );
+
+    const formattedFollowing = following.map((user) => ({
+      id: user?.id,
+      name: user?.name,
+      user: user?.user,
+      biography: user?.biography,
+      profilephoto: user?.profilephoto,
+    }));
+
+    res.status(200).json(formattedFollowing);
+  } catch (error) {
+    next(error);
   }
+};
 
-  const following  = await Promise.all(
-    user.following.map((id) => userModel.findById(id))
-  );
-  
-  // const formattedFollowing = following.map(({_id, name}) => {_id; name;})
+export const getUserFollowers: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      throw createHttpError(404, "User not found");
+    }
+
+    const followers = await Promise.all(
+      user.followers.map((id) => userModel.findById(id))
+    );
+
+    const formattedFollowers = followers.map((user) => ({
+      id: user?.id,
+      name: user?.name,
+      user: user?.user,
+      biography: user?.biography,
+      profilephoto: user?.profilephoto,
+    }));
+
+    res.status(200).json(formattedFollowers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+interface followRequestBody {
+  id: string;
+  followingId: string;
+}
+
+export const handleFollowing: RequestHandler<
+  followRequestBody,
+  unknown,
+  unknown,
+  unknown
+> = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const followingId = req.params.followingId;
+    const user = await userModel.findById(userId);
+    const userFollows = await userModel.findById(followingId);
+
+    if (!user || !userFollows) {
+      throw createHttpError(404, "User not found");
+    }
+
+    if (user.following.includes(new mongoose.Types.ObjectId(followingId))) {
+      console.log("Entra");
+      user.following = user.following.filter(
+        (id) => id.toString() !== followingId
+      );
+      userFollows.followers = userFollows.followers.filter(
+        (id) => id.toString() !== userId
+      );
+    } else {
+      user.following.push(new mongoose.Types.ObjectId(followingId));
+      userFollows.followers.push(new mongoose.Types.ObjectId(userId));
+    }
+    await user.save();
+    await userFollows.save();
+    res.status(200).json("prueba");
+  } catch (error) {
+    next(error);
+  }
 };
 
 interface UpdateUserParams {
