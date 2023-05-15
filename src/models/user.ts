@@ -5,11 +5,11 @@ const userSchema = new Schema({
     email: { type: String, required: true, unique: true },
     user: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    following: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
-    followers: [{ type: Schema.Types.ObjectId, ref: "User", required: false }],
-    biography: { type: String, required: false, default: "" },
-    profilephoto: { type: String, required: false, default: "" }, 
-    enable: { type: Boolean, required: true }
+    following: {type: Array, default: []},
+    followers: {type: Array, default:[]},
+    biography: { type: String, default: "" },
+    picturePath: { type: String, default: "" }, 
+    enabled: { type: Boolean, default: true }
 },{timestamps: true});
 
 type User = InferSchemaType<typeof userSchema>;

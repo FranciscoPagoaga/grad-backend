@@ -5,10 +5,12 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { signUp } from "./controllers/auth";
 import { createPost } from "./controllers/posts";
+import { updateUser } from "./controllers/users";
 import userModel from "./models/user";
 import userRoutes from "./routes/users";
 import postRoutes from "./routes/posts";
 import authRoutes from "./routes/auth";
+import { verifyToken } from "./middleware/auth";
 
 
 const app = express();
@@ -29,18 +31,19 @@ const upload = multer({ storage })
 
 /* Routes With Files */
 app.post("/api/auth/signup", upload.single("picture"), signUp);
-app.post("/api/posts", upload.single("picture"), createPost);
+app.post("/api/posts/", verifyToken, upload.single("picture"), createPost);
+app.patch("/api/users/:userId", verifyToken, upload.single("picture"), updateUser);
 
 //routes
-app.use("/api/auth", authRoutes)
+app.use("/api/auth", authRoutes);
 
 app.use("/api/users", userRoutes);
 
 app.use("/api/posts", postRoutes);
 
-app.use((req, res, next) => {
-  next(createHttpError("Endpoint not found"));
-});
+// app.use((req, res, next) => {
+//   next(createHttpError("Endpoint not found"));
+// });
 
 app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
   console.error(error);
