@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import userModel from "../models/user";
+import postModel from "../models/post";
 import createHttpError from "http-errors";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
@@ -9,13 +10,28 @@ import { create } from "domain";
 export const getUser: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.params.userId;
-
     if (!mongoose.isValidObjectId(userId)) {
       throw createHttpError(400, "Invalid user id");
     }
 
     const user = await userModel.findById(userId).exec();
 
+    //verifies if the user exists instead of throwing null
+    if (!user) {
+      throw createHttpError(404, "User not found");
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserByName: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    
+    const user = await userModel.findOne({ user: userId}).exec();
     //verifies if the user exists instead of throwing null
     if (!user) {
       throw createHttpError(404, "User not found");
@@ -46,7 +62,7 @@ export const getUserFollowing: RequestHandler = async (req, res, next) => {
     );
 
     const formattedFollowing = following.map((user) => ({
-      id: user?.id,
+      _id: user?._id,
       name: user?.name,
       user: user?.user,
       biography: user?.biography,
@@ -78,7 +94,7 @@ export const getUserFollowers: RequestHandler = async (req, res, next) => {
     );
 
     const formattedFollowers = followers.map((user) => ({
-      id: user?.id,
+      _id: user?.id,
       name: user?.name,
       user: user?.user,
       biography: user?.biography,
@@ -115,7 +131,6 @@ export const handleFollowing: RequestHandler<
     }
 
     if (user.following.includes(new mongoose.Types.ObjectId(followingId))) {
-      console.log("Entra");
       user.following = user.following.filter(
         (id) => id.toString() !== followingId
       );
@@ -134,7 +149,7 @@ export const handleFollowing: RequestHandler<
     );
 
     const formattedFollowing = following.map((user) => ({
-      id: user?.id,
+      _id: user?.id,
       name: user?.name,
       user: user?.user,
       biography: user?.biography,
@@ -149,33 +164,21 @@ export const handleFollowing: RequestHandler<
 
 export const updateUser: RequestHandler = async (req, res, next) => {
   const userId = req.params.userId;
-  const newName = req.body.name;
-  const newBiography = req.body.biography;
-  const newPicturePath = req.body.picturePath
+  const name = req.body.name;
+  const biography = req.body.biography;
+  const picturePath = req.body.picturePath
 
   try {
     if (!mongoose.isValidObjectId(userId)) {
       throw createHttpError(400, "Invalid user id");
     }
 
-    if (!newName) {
-      throw createHttpError(400, "User must have a name");
-    }
-
-    if (!newPicturePath) {
-      throw createHttpError(400, "User must have a picturePath");
-    }
-
-    if (!newBiography) {
-      throw createHttpError(400, "User must have a biography");
-    }
-
     const updatedUser = await userModel.findByIdAndUpdate(
       userId,
       {
-        name: newName,
-        picturePath: newPicturePath,
-        biography: newBiography,
+        name: name,
+        picturePath: picturePath,
+        biography: biography,
       },
       { new: true }
     );
@@ -184,16 +187,25 @@ export const updateUser: RequestHandler = async (req, res, next) => {
       throw createHttpError(404, "User not found");
     }
 
-    const formattedUser = {
-      id: updatedUser.id,
-      name: updatedUser.name,
-      user: updatedUser.user,
-      biography: updatedUser.biography,
-      picturePath: updatedUser.picturePath,
-    };
+    const updatePosts = await postModel.updateMany({userId: userId}, {name: name, userPicturePath: picturePath}).exec()
 
-    res.status(200).json(formattedUser);
+    res.status(200).json(updatedUser);
   } catch (error) {
     next(error);
   }
 };
+
+export const searchBySimilarity: RequestHandler = async (req, res, next) => {
+  const user = req.params.user;
+  try{
+    const regex = new RegExp(user, "i");
+    const query = userModel.find();
+    query.or([{user: regex}, {name: regex}])
+
+    const results = await query.exec();
+    res.status(200).json(results);
+  } catch(error){
+    next(error);
+  }
+
+}

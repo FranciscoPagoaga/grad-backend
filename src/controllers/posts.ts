@@ -37,21 +37,18 @@ export const createPost: RequestHandler<
       throw createHttpError(404, "User not found");
     }
 
-    await postModel.create({
+    const post = await postModel.create({
       userId,
       name: user.name,
       user: user.user,
       content,
       enabled: true,
-      comments: {},
       likes: {},
       picturePath,
       userPicturePath: user.picturePath,
       watchtime: {},
     });
 
-    const post = await postModel.find().sort({ createdAt: -1 });
-    console.log(post);
     res.status(201).json(post);
   } catch (error) {
     next(error);
@@ -164,6 +161,50 @@ export const likePost: RequestHandler = async (req, res, next) => {
       { likes: post.likes },
       { new: true }
     );
+    res.status(200).json(updatedPost);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addWatchtime: RequestHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userId, watchtime } = req.body;
+    if (!userId) {
+      throw createHttpError(400, "Must send user id");
+    }
+
+    if (!mongoose.isValidObjectId(userId)) {
+      throw createHttpError(400, "Invalid user id");
+    }
+    
+    const post = await postModel.findById(id);
+
+    if (!post) {
+      throw createHttpError(404, "Post not found");
+    }
+
+    let updatedPost;
+    if(post.watchtime.get(userId)){
+      updatedPost = await postModel.updateOne(
+      { _id: id },
+      {
+        $inc: { [`watchtime.${userId}`]: watchtime },
+      },
+      { new: true }
+    );
+    } else{
+      updatedPost = await postModel.updateOne(
+        { _id: id },
+        {
+          $set: { [`watchtime.${userId}`]: watchtime },
+        },
+        { new: true }
+      );
+    }
+
+    
     res.status(200).json(updatedPost);
   } catch (error) {
     next(error);

@@ -14,8 +14,9 @@ import { verifyToken } from "./middleware/auth";
 
 
 const app = express();
-
 app.use(express.json());
+
+app.use("/assets", express.static(path.join(__dirname, "public/assets")));
 
 // File Storage
 const storage = multer.diskStorage({
