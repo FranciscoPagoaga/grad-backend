@@ -4,13 +4,14 @@ const postSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     name: { type: String, required: true },
-    user: {type: String, required: true},
+    user: { type: String, required: true },
     content: { type: String, required: true },
-    likes: { type: Map, of: Boolean },
-    picturePath: { type: String, required: false },
+    likes: { type: Map, of: Boolean, default: new Map },
+    picturePath: { type: String, default: "" },
     userPicturePath: { type: String },
-    watchtime: { type: Map, of: Number, default: Map },
-    enabled: { type: Boolean, required: true },
+    watchtime: { type: Map, of: Number, default: new Map },
+    enabled: { type: Boolean, default: true },
+    rating: { type: Map, of: Number, default: new Map },
   },
   { timestamps: true }
 );

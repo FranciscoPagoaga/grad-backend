@@ -1,10 +1,9 @@
 import { RequestHandler } from "express";
 import userModel from "../models/user";
 import postModel from "../models/post";
+import commentModel from "../models/comment";
 import createHttpError from "http-errors";
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
-import { create } from "domain";
 
 /* Read Functions */
 export const getUser: RequestHandler = async (req, res, next) => {
@@ -30,8 +29,8 @@ export const getUser: RequestHandler = async (req, res, next) => {
 export const getUserByName: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.params.userId;
-    
-    const user = await userModel.findOne({ user: userId}).exec();
+
+    const user = await userModel.findOne({ user: userId }).exec();
     //verifies if the user exists instead of throwing null
     if (!user) {
       throw createHttpError(404, "User not found");
@@ -166,7 +165,8 @@ export const updateUser: RequestHandler = async (req, res, next) => {
   const userId = req.params.userId;
   const name = req.body.name;
   const biography = req.body.biography;
-  const picturePath = req.body.picturePath
+  const picturePath = req.body.picturePath;
+  const phoneNumber = req.body.phoneNumber;
 
   try {
     if (!mongoose.isValidObjectId(userId)) {
@@ -176,18 +176,25 @@ export const updateUser: RequestHandler = async (req, res, next) => {
     const updatedUser = await userModel.findByIdAndUpdate(
       userId,
       {
-        name: name,
-        picturePath: picturePath,
-        biography: biography,
+        name,
+        picturePath,
+        biography,
+        phoneNumber
       },
       { new: true }
     );
 
-    if(!updatedUser){
+    if (!updatedUser) {
       throw createHttpError(404, "User not found");
     }
 
-    const updatePosts = await postModel.updateMany({userId: userId}, {name: name, userPicturePath: picturePath}).exec()
+    await postModel
+      .updateMany({ userId }, { name, userPicturePath: picturePath })
+      .exec();
+
+    await commentModel
+      .updateMany({ userId }, { name, userPicturePath: picturePath })
+      .exec();
 
     res.status(200).json(updatedUser);
   } catch (error) {
@@ -197,15 +204,14 @@ export const updateUser: RequestHandler = async (req, res, next) => {
 
 export const searchBySimilarity: RequestHandler = async (req, res, next) => {
   const user = req.params.user;
-  try{
+  try {
     const regex = new RegExp(user, "i");
     const query = userModel.find();
-    query.or([{user: regex}, {name: regex}])
+    query.or([{ user: regex }, { name: regex }]);
 
     const results = await query.exec();
     res.status(200).json(results);
-  } catch(error){
+  } catch (error) {
     next(error);
   }
-
-}
+};

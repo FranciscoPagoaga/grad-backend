@@ -8,7 +8,8 @@ const userSchema = new Schema({
     following: {type: Array, default: []},
     followers: {type: Array, default:[]},
     biography: { type: String, default: "" },
-    picturePath: { type: String, default: "" }, 
+    picturePath: { type: String, default: "" },
+    phoneNumber: { type: String, default: "" }, 
     enabled: { type: Boolean, default: true }
 },{timestamps: true});
 

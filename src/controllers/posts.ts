@@ -42,11 +42,8 @@ export const createPost: RequestHandler<
       name: user.name,
       user: user.user,
       content,
-      enabled: true,
-      likes: {},
       picturePath,
       userPicturePath: user.picturePath,
-      watchtime: {},
     });
 
     res.status(201).json(post);
@@ -110,7 +107,7 @@ export const getUserPosts: RequestHandler = async (req, res, next) => {
 
 export const getPost: RequestHandler = async (req, res, next) => {
   try {
-    const postId = req.params.postId;
+    const { postId } = req.params;
 
     if (!mongoose.isValidObjectId(postId)) {
       throw createHttpError(400, "Invalid post id");
@@ -205,6 +202,37 @@ export const addWatchtime: RequestHandler = async (req, res, next) => {
     }
 
     
+    res.status(200).json(updatedPost);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const ratePost: RequestHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { userId, rating } = req.body;
+
+    if (!userId) {
+      throw createHttpError(400, "Must send user id");
+    }
+
+    if (!mongoose.isValidObjectId(userId)) {
+      throw createHttpError(400, "Invalid user id");
+    }
+    const post = await postModel.findById(id);
+
+    if (!post) {
+      throw createHttpError(404, "Post not found");
+    }
+
+    post.rating.set(userId, rating);
+    
+    const updatedPost = await postModel.findByIdAndUpdate(
+      id,
+      { rating: post.rating },
+      { new: true }
+    );
     res.status(200).json(updatedPost);
   } catch (error) {
     next(error);

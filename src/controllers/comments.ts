@@ -3,7 +3,6 @@ import postModel from "../models/post";
 import userModel from "../models/user";
 import commentModel from "../models/comment";
 import createHttpError from "http-errors";
-import mongoose from "mongoose";
 
 interface CreateCommentBody {
   userId: string;

@@ -16,5 +16,4 @@ router.get("/:userId/following", verifyToken,  UsersController.getUserFollowing)
 
 router.get("/:userId/followers", verifyToken, UsersController.getUserFollowers);
 
-
 export default router;

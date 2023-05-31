@@ -10,10 +10,14 @@ router.get("/:userId/feed", verifyToken, PostsController.getFeedPosts);
 
 router.get("/:userId", verifyToken, PostsController.getUserPosts);
 
+router.get("/:postId/post", verifyToken, PostsController.getPost);
+
 /* Update */
 router.patch("/:id/like", verifyToken, PostsController.likePost);
 
 router.patch("/:id/watchtime", verifyToken, PostsController.addWatchtime);
+
+router.patch("/:id/rate", verifyToken, PostsController.ratePost);
 
 
 /* Comment Routes */
