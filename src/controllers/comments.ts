@@ -67,8 +67,7 @@ export const getComments: RequestHandler<
     const { postId } = req.params;
 
     const comments = await commentModel
-      .find({ postId })
-      .sort({ createdAt: -1 });
+      .find({ postId });
 
     res.status(201).json(comments);
   } catch (error) {

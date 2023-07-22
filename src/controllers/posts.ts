@@ -97,6 +97,7 @@ export const getUserPosts: RequestHandler = async (req, res, next) => {
 
     const posts = await postModel
       .find({ userId: userId, enabled: true })
+      .sort({ createdAt: -1 })
       .exec();
 
     res.status(200).json(posts);
